@@ -1,7 +1,8 @@
 import v4 from 'aws-signature-v4'
 import crypto from 'crypto'
 
-export const signedUrl = ({ credentials, endpoint, region, expires }) => {
+export const signedUrl = ({ credentials, endpoint, region, clockSkew = 0, expires }) => {
+  const timestamp = Date.now() + clockSkew
   const payload = crypto
     .createHash('sha256')
     .update('', 'utf8')
@@ -11,8 +12,9 @@ export const signedUrl = ({ credentials, endpoint, region, expires }) => {
     secret: credentials.secretAccessKey,
     sessionToken: credentials.sessionToken,
     protocol: 'wss',
-    region: region,
-    expires: expires,
+    region,
+    timestamp,
+    expires
   })
 }
 
@@ -38,6 +40,6 @@ export const signUrl = (aws, callback) => {
       callback(null, signedUrl(aws))
     })
   } else {
-      callback(null, unsignedUrl(aws.endpoint))
+    callback(null, unsignedUrl(aws.endpoint))
   }
 }
